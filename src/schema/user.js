@@ -1,6 +1,6 @@
-const { hash } = require("bcrypt");
+
 const Mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { generateAccessToken, generateRefreshToken } = require("../auth/generateTokens");
 const getUserInfo = require("../lib/getUserInfo");
 const Token = require("../schema/token")
