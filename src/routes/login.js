@@ -12,7 +12,7 @@ router.post("/", async (req, res) => {
             error: "archivos son requeridos"
         }));
     }
-    //autenticar usuario
+   
 
     const user = await User.findOne({ username });
 
