@@ -1,57 +1,47 @@
-
-const Mongoose = require("mongoose");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const { generateAccessToken, generateRefreshToken } = require("../auth/generateTokens");
 const getUserInfo = require("../lib/getUserInfo");
-const Token = require("../schema/token")
-const UserSchema = new Mongoose.Schema({
-    id: { type: Object },
+const Token = require("../schema/token");
+
+const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
-    role: { type: String, required: true, enum: ["admin", "user"] } 
+    role: { type: String, required: true, enum: ["admin", "user"] }
 });
 
-UserSchema.pre("save", function (next) {
-    if (this.isModified("password") || this.isNew) {
-        const document = this;
+// 🛠️ Middleware para encriptar la contraseña antes de guardarla
+UserSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
 
-        bcrypt.hash(document.password, 10, (err, hash) => {
-            if (err) {
-                next(err);
-            } else {
-                document.password = hash;
-                next();
-            }
-        })
-    } else {
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
         next();
+    } catch (err) {
+        next(err);
     }
-})
+});
 
-UserSchema.methods.usernameExist = async function (username) {
-    const result = await Mongoose.model("User").find({ username });
-    return result.length > 0;
+// 🔍 Método para verificar la contraseña
+UserSchema.methods.comparePassword = function (password) {
+    return bcrypt.compare(password, this.password);
 };
 
-UserSchema.methods.comparePassword = async function (password, hash) {
-    const same = await bcrypt.compare(password, hash);
-    return same;
-};
-
+// 🔐 Métodos para generar tokens
 UserSchema.methods.createAccessToken = function () {
     return generateAccessToken(getUserInfo(this));
-}
+};
 
 UserSchema.methods.createRefreshToken = async function () {
-    const refreshToken = generateRefreshToken(getUserInfo(this))
+    const refreshToken = generateRefreshToken(getUserInfo(this));
     try {
         await new Token({ token: refreshToken }).save();
-
         return refreshToken;
     } catch (error) {
-        console.log(error)
+        console.error(error);
     }
-}
+};
 
-module.exports = Mongoose.model("User", UserSchema);
+module.exports = mongoose.model("User", UserSchema);

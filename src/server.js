@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 require('dotenv').config();
+
+
 const authenticate = require('./auth/authenticate');
 
 class Server {
@@ -76,6 +78,7 @@ class Server {
                 useUnifiedTopology: true,
             });
             console.log('Connected to MongoDB');
+            
         } catch (error) {
             console.error("Error conectando a MongoDB:", error);
             process.exit(1);

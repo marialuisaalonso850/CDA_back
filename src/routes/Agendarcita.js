@@ -111,6 +111,40 @@ router.get("/:codigoCita", async (req, res) => {
       res.status(500).json({ error: "Error interno del servidor." });
     }
   });
+  router.put("/:codigoCita", async (req, res) => {
+    try {
+      const { codigoCita } = req.params;
+      const { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado } = req.body;
+  
+      // Validar si la cita existe
+      const citaExistente = await Cita.findOne({ codigoCita });
+      if (!citaExistente) {
+        return res.status(404).json({ error: "Cita no encontrada." });
+      }
+  
+      // Actualizar los campos de la cita
+      const citaActualizada = await Cita.findOneAndUpdate(
+        { codigoCita },
+        { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado },
+        { new: true } // Retorna la cita actualizada
+      );
+  
+      res.json({ message: "Cita actualizada con éxito.", cita: citaActualizada });
+    } catch (error) {
+      console.error("Error al actualizar la cita:", error);
+      res.status(500).json({ error: "Error interno del servidor." });
+    }
+  });
+  
+  router.get("/", async (req, res) => {
+    try {
+      const citas = await Cita.find(); // Busca todas las citas en la BD
+      res.status(200).json(citas);
+    } catch (error) {
+      console.error("Error al obtener todas las citas:", error);
+      res.status(500).json({ error: "Error interno del servidor." });
+    }
+  });
   
 
 module.exports = router;
