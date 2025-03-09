@@ -80,4 +80,37 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.get("/:codigoCita", async (req, res) => {
+    try {
+      const { codigoCita } = req.params;
+      const cita = await Cita.findOne({ codigoCita });
+  
+      if (!cita) {
+        return res.status(404).json({ error: "Cita no encontrada" });
+      }
+  
+      res.json(cita);
+    } catch (error) {
+      console.error("Error al buscar la cita:", error);
+      res.status(500).json({ error: "Error al buscar la cita" });
+    }
+  });
+
+  router.delete("/:codigoCita", async (req, res) => {
+    try {
+      const { codigoCita } = req.params;
+      const citaEliminada = await Cita.findOneAndDelete({ codigoCita });
+  
+      if (!citaEliminada) {
+        return res.status(404).json({ error: "Cita no encontrada." });
+      }
+  
+      res.json({ message: "Cita eliminada con éxito." });
+    } catch (error) {
+      console.error("Error al eliminar la cita:", error);
+      res.status(500).json({ error: "Error interno del servidor." });
+    }
+  });
+  
+
 module.exports = router;
