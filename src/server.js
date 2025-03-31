@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 require('dotenv').config();
+
+
 const authenticate = require('./auth/authenticate');
 
 class Server {
@@ -15,7 +17,7 @@ class Server {
         this.port = port || 3000;
 
         this.paths = {
-            signup: '/api/signup',
+            crearUsuario: '/api/crearUsuario',
             login: '/api/login',
             user: '/api/user',
             signout: '/api/signout',
@@ -23,7 +25,8 @@ class Server {
             refreshToken: '/api/refresh-token',
             citas: '/api/citas',
             eliminar: '/api/eliminarcita',
-            home: '/'
+            home: '/',
+            revision: "/api/revisiones"
         }
 
         this.middlewares();
@@ -41,14 +44,15 @@ class Server {
     }
 
     routes() {
-        this.app.use(this.paths.signup, require('./routes/signup'));
+        this.app.use(this.paths.crearUsuario, require('./routes/CrearUsuario'));
         this.app.use(this.paths.login, require('./routes/login'));
-        this.app.use(this.paths.user, authenticate, require('./routes/user'));
+        this.app.use(this.paths.user , require('./routes/user'));
         this.app.use(this.paths.signout, require('./routes/signout'));
         this.app.use(this.paths.todos, authenticate, require('./routes/todos'));
         this.app.use(this.paths.refreshToken, require('./routes/refreshToken'));
         this.app.use(this.paths.citas, require('./routes/Agendarcita'));
         this.app.use(this.paths.eliminar, require('./routes/eliminarCita'));
+        this.app.use(this.paths.revision, require('./routes/revision'));
         
         this.app.get(this.paths.home, (req, res) => {
             res.json({ message: 'server in good state'});
@@ -76,6 +80,7 @@ class Server {
                 useUnifiedTopology: true,
             });
             console.log('Connected to MongoDB');
+            
         } catch (error) {
             console.error("Error conectando a MongoDB:", error);
             process.exit(1);
