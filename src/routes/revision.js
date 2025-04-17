@@ -29,19 +29,21 @@ router.post("/", async (req, res) => {
     const cita = await Cita.findOne({ codigoCita });
     if (!cita) return res.status(404).json({ message: "Cita no encontrada" });
 
-    // Permitir crear la revisión si el estado es distinto de "Pendiente" o "Rechazado"
+    // Permitir crear la revisión solo si la cita está en estado "Pendiente" o "Rechazado"
     if (cita.estado !== "Pendiente" && cita.estado !== "Rechazado") {
       return res.status(400).json({ message: "La tecnomecánica ya fue realizada o procesada" });
     }
-    
 
+    // Crear la revisión
     const nuevaRevision = new Revision({
       ...req.body,
-      estadoFinal: "Pendiente",
+      estadoFinal: "Pendiente", // Estado inicial de la revisión
     });
 
+    // Guardar la revisión
     await nuevaRevision.save();
 
+    // Actualizar el estado de la cita a "Tecnomecánica realizada"
     cita.estado = "Tecnomecánica realizada";
     await cita.save();
 
@@ -64,9 +66,11 @@ router.put('/aprobar/:codigoCita', async (req, res) => {
     const revision = await Revision.findOne({ codigoCita: req.params.codigoCita });
     if (!revision) return res.status(404).json({ error: "Revisión no encontrada" });
 
+    // Cambiar el estado final de la revisión a "Aprobada"
     revision.estadoFinal = "Aprobada";
     await revision.save();
 
+    // Actualizar el estado de la cita a "Aprobada"
     cita.estado = "Aprobada";
     await cita.save();
 
@@ -89,9 +93,11 @@ router.put('/rechazar/:codigoCita', async (req, res) => {
     const revision = await Revision.findOne({ codigoCita: req.params.codigoCita });
     if (!revision) return res.status(404).json({ error: "Revisión no encontrada" });
 
+    // Cambiar el estado final de la revisión a "Rechazada"
     revision.estadoFinal = "Rechazada";
     await revision.save();
 
+    // Actualizar el estado de la cita a "No aprobada"
     cita.estado = "No aprobada";
     await cita.save();
 
@@ -125,9 +131,11 @@ router.put("/:codigoCita", async (req, res) => {
       return res.status(404).json({ error: "Revisión no encontrada." });
     }
 
+    // Actualizar el estado final de la revisión
     revision.estadoFinal = estado;
     await revision.save();
 
+    // Actualizar el estado de la cita
     cita.estado = estado === "Aprobada" ? "Aprobada" : "No aprobada";
     await cita.save();
 

@@ -36,7 +36,6 @@ const revisionSchema = new Schema(
     electricidad: electricidadSchema,
     observaciones: { type: String, default: "" },
     estadoFinal: { type: String, enum: ["Aprobado", "Reprobado", "Pendiente"], default: "Pendiente" },
-    estadoRevisión: { type: String, enum: ["Pendiente", "Realizada", "Rechazada"], default: "Pendiente" },
     codigoCita: { type: String, required: true },
   },
   { timestamps: true }

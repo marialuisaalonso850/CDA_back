@@ -3,29 +3,39 @@ const { v4: uuidv4 } = require("uuid");
 const Cita = require("../schema/agendarcita");
 const sendConfirmationCitas = require("./correoCitas");
 const Placa = require("../schema/placasValidas");
+
 const router = express.Router();
 
+// Crear nueva cita
 router.post("/", async (req, res) => {
   try {
     const { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado, captchaToken } = req.body;
 
-    // Verificar que todos los campos sean proporcionados
+    // Validar campos requeridos
     if (!nombre || !correo || !telefono || !fechaCita || !horaCita || !placa || !cdaSeleccionado || !captchaToken) {
       return res.status(400).json({ error: "Todos los campos son obligatorios." });
     }
 
-    // Validaciones de formato
+    // Validar formato correo
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(correo)) return res.status(400).json({ error: "Formato de correo inválido." });
+    if (!emailRegex.test(correo)) {
+      return res.status(400).json({ error: "Formato de correo inválido." });
+    }
 
+    // Validar formato teléfono
     const phoneRegex = /^3[0-9]{9}$/;
-    if (!phoneRegex.test(telefono)) return res.status(400).json({ error: "Formato de teléfono inválido." });
+    if (!phoneRegex.test(telefono)) {
+      return res.status(400).json({ error: "Formato de teléfono inválido." });
+    }
 
+    // Validar fecha
     const hoy = new Date();
     const fechaCitaDate = new Date(fechaCita);
-    if (fechaCitaDate < hoy) return res.status(400).json({ error: "La fecha de la cita no puede ser anterior a hoy." });
+    if (fechaCitaDate < hoy) {
+      return res.status(400).json({ error: "La fecha de la cita no puede ser anterior a hoy." });
+    }
 
-    // Normalizar y validar placa
+    // Validar placa
     const placaFormateada = placa.trim().toUpperCase();
     const placaRegex = /^[A-Z]{3}[0-9]{3}$/;
     const placaEspecialRegex = /^[A-Z]{3}[0-9]{2}[A-F]{1}$/;
@@ -33,22 +43,19 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Formato de placa inválido." });
     }
 
-    // Buscar placa en la base de datos
     const placaRegistrada = await Placa.findOne({ placa: placaFormateada });
     if (!placaRegistrada) {
       return res.status(400).json({ error: "La placa ingresada no está registrada en el sistema." });
     }
 
-    // Verificar si ya hay una cita en esa fecha, hora y CDA
+    // Verificar duplicado
     const citaDuplicada = await Cita.findOne({ fechaCita, horaCita, cdaSeleccionado });
     if (citaDuplicada) {
       return res.status(400).json({ error: "Ya existe una cita agendada para esta fecha y hora en este CDA." });
     }
 
-    // Generar código único de cita
+    // Crear cita
     const codigoCita = uuidv4();
-
-    // Guardar nueva cita en la base de datos
     const nuevaCita = new Cita({
       codigoCita,
       nombre,
@@ -63,7 +70,7 @@ router.post("/", async (req, res) => {
 
     await nuevaCita.save();
 
-    // Enviar correo de confirmación
+    // Enviar confirmación
     await sendConfirmationCitas(codigoCita, correo, nombre, fechaCita, horaCita, placaFormateada);
 
     res.status(201).json({
@@ -71,28 +78,31 @@ router.post("/", async (req, res) => {
       codigoCita,
       cita: nuevaCita
     });
+
   } catch (error) {
     console.error("Error al agendar cita:", error);
     res.status(500).json({ error: "Error interno del servidor." });
   }
 });
 
+// Obtener cita por código
 router.get("/:codigoCita", async (req, res) => {
   try {
     const { codigoCita } = req.params;
     const cita = await Cita.findOne({ codigoCita });
 
     if (!cita) {
-      return res.status(404).json({ error: "Cita no encontrada" });
+      return res.status(404).json({ error: "Cita no encontrada." });
     }
 
     res.json(cita);
   } catch (error) {
     console.error("Error al buscar la cita:", error);
-    res.status(500).json({ error: "Error al buscar la cita" });
+    res.status(500).json({ error: "Error al buscar la cita." });
   }
 });
 
+// Eliminar cita
 router.delete("/:codigoCita", async (req, res) => {
   try {
     const { codigoCita } = req.params;
@@ -109,34 +119,101 @@ router.delete("/:codigoCita", async (req, res) => {
   }
 });
 
+// Actualizar cita
 router.put("/:codigoCita", async (req, res) => {
   try {
     const { codigoCita } = req.params;
     const { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado, estado } = req.body;
 
-    // Validar si la cita existe
+    // Validar existencia
     const citaExistente = await Cita.findOne({ codigoCita });
     if (!citaExistente) {
       return res.status(404).json({ error: "Cita no encontrada." });
     }
 
-    // Actualizar los campos de la cita, incluyendo estado
+    // Validaciones si se envían campos
+    if (correo) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(correo)) {
+        return res.status(400).json({ error: "Formato de correo inválido." });
+      }
+    }
+
+    if (telefono) {
+      const phoneRegex = /^3[0-9]{9}$/;
+      if (!phoneRegex.test(telefono)) {
+        return res.status(400).json({ error: "Formato de teléfono inválido." });
+      }
+    }
+
+    let placaFormateada;
+    if (placa) {
+      placaFormateada = placa.trim().toUpperCase();
+      const placaRegex = /^[A-Z]{3}[0-9]{3}$/;
+      const placaEspecialRegex = /^[A-Z]{3}[0-9]{2}[A-F]{1}$/;
+      if (!placaRegex.test(placaFormateada) && !placaEspecialRegex.test(placaFormateada)) {
+        return res.status(400).json({ error: "Formato de placa inválido." });
+      }
+      const placaRegistrada = await Placa.findOne({ placa: placaFormateada });
+      if (!placaRegistrada) {
+        return res.status(400).json({ error: "La placa ingresada no está registrada en el sistema." });
+      }
+    }
+
+    if (fechaCita) {
+      const hoy = new Date();
+      const fechaCitaDate = new Date(fechaCita);
+      if (fechaCitaDate < hoy) {
+        return res.status(400).json({ error: "La fecha de la cita no puede ser anterior a hoy." });
+      }
+    }
+
+    // Verificar duplicado si cambian fecha/hora/cda
+    if (fechaCita && horaCita && cdaSeleccionado) {
+      const citaDuplicada = await Cita.findOne({
+        fechaCita,
+        horaCita,
+        cdaSeleccionado,
+        codigoCita: { $ne: codigoCita }
+      });
+      if (citaDuplicada) {
+        return res.status(400).json({ error: "Ya existe una cita para esa fecha, hora y CDA." });
+      }
+    }
+
+    // Construir actualización
+    const actualizaciones = {};
+    if (nombre) actualizaciones.nombre = nombre;
+    if (correo) actualizaciones.correo = correo;
+    if (telefono) actualizaciones.telefono = telefono;
+    if (fechaCita) actualizaciones.fechaCita = fechaCita;
+    if (horaCita) actualizaciones.horaCita = horaCita;
+    if (placaFormateada) actualizaciones.placa = placaFormateada;
+    if (cdaSeleccionado) actualizaciones.cdaSeleccionado = cdaSeleccionado;
+    if (estado) actualizaciones.estado = estado;
+
+    // Actualizar
     const citaActualizada = await Cita.findOneAndUpdate(
       { codigoCita },
-      { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado, estado },
-      { new: true } // Retorna la cita actualizada
+      { $set: actualizaciones },
+      { new: true }
     );
 
-    res.json({ message: "Cita actualizada con éxito.", cita: citaActualizada });
+    res.json({
+      message: "Cita actualizada con éxito.",
+      cita: citaActualizada
+    });
+
   } catch (error) {
     console.error("Error al actualizar la cita:", error);
     res.status(500).json({ error: "Error interno del servidor." });
   }
 });
 
+// Listar todas las citas
 router.get("/", async (req, res) => {
   try {
-    const citas = await Cita.find(); // Busca todas las citas en la BD
+    const citas = await Cita.find();
     res.status(200).json(citas);
   } catch (error) {
     console.error("Error al obtener todas las citas:", error);
