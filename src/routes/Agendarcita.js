@@ -2,8 +2,8 @@ const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const Cita = require("../schema/agendarcita");
 const sendConfirmationCitas = require("./correoCitas");
-const router = express.Router();
 const Placa = require("../schema/placasValidas");
+const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
@@ -35,9 +35,6 @@ router.post("/", async (req, res) => {
 
     // Buscar placa en la base de datos
     const placaRegistrada = await Placa.findOne({ placa: placaFormateada });
-    console.log(`Buscando placa en la base de datos: ${placaFormateada}`);
-    console.log("Resultado de la búsqueda:", placaRegistrada);
-
     if (!placaRegistrada) {
       return res.status(400).json({ error: "La placa ingresada no está registrada en el sistema." });
     }
@@ -67,7 +64,7 @@ router.post("/", async (req, res) => {
     await nuevaCita.save();
 
     // Enviar correo de confirmación
-    await sendConfirmationCitas(codigoCita,correo, nombre, fechaCita, horaCita, placaFormateada);
+    await sendConfirmationCitas(codigoCita, correo, nombre, fechaCita, horaCita, placaFormateada);
 
     res.status(201).json({
       message: "Cita agendada con éxito.",
@@ -81,70 +78,70 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/:codigoCita", async (req, res) => {
-    try {
-      const { codigoCita } = req.params;
-      const cita = await Cita.findOne({ codigoCita });
-  
-      if (!cita) {
-        return res.status(404).json({ error: "Cita no encontrada" });
-      }
-  
-      res.json(cita);
-    } catch (error) {
-      console.error("Error al buscar la cita:", error);
-      res.status(500).json({ error: "Error al buscar la cita" });
-    }
-  });
+  try {
+    const { codigoCita } = req.params;
+    const cita = await Cita.findOne({ codigoCita });
 
-  router.delete("/:codigoCita", async (req, res) => {
-    try {
-      const { codigoCita } = req.params;
-      const citaEliminada = await Cita.findOneAndDelete({ codigoCita });
-  
-      if (!citaEliminada) {
-        return res.status(404).json({ error: "Cita no encontrada." });
-      }
-  
-      res.json({ message: "Cita eliminada con éxito." });
-    } catch (error) {
-      console.error("Error al eliminar la cita:", error);
-      res.status(500).json({ error: "Error interno del servidor." });
+    if (!cita) {
+      return res.status(404).json({ error: "Cita no encontrada" });
     }
-  });
-  router.put("/:codigoCita", async (req, res) => {
-    try {
-      const { codigoCita } = req.params;
-      const { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado } = req.body;
-  
-      // Validar si la cita existe
-      const citaExistente = await Cita.findOne({ codigoCita });
-      if (!citaExistente) {
-        return res.status(404).json({ error: "Cita no encontrada." });
-      }
-  
-      // Actualizar los campos de la cita
-      const citaActualizada = await Cita.findOneAndUpdate(
-        { codigoCita },
-        { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado },
-        { new: true } // Retorna la cita actualizada
-      );
-  
-      res.json({ message: "Cita actualizada con éxito.", cita: citaActualizada });
-    } catch (error) {
-      console.error("Error al actualizar la cita:", error);
-      res.status(500).json({ error: "Error interno del servidor." });
+
+    res.json(cita);
+  } catch (error) {
+    console.error("Error al buscar la cita:", error);
+    res.status(500).json({ error: "Error al buscar la cita" });
+  }
+});
+
+router.delete("/:codigoCita", async (req, res) => {
+  try {
+    const { codigoCita } = req.params;
+    const citaEliminada = await Cita.findOneAndDelete({ codigoCita });
+
+    if (!citaEliminada) {
+      return res.status(404).json({ error: "Cita no encontrada." });
     }
-  });
-  
-  router.get("/", async (req, res) => {
-    try {
-      const citas = await Cita.find(); // Busca todas las citas en la BD
-      res.status(200).json(citas);
-    } catch (error) {
-      console.error("Error al obtener todas las citas:", error);
-      res.status(500).json({ error: "Error interno del servidor." });
+
+    res.json({ message: "Cita eliminada con éxito." });
+  } catch (error) {
+    console.error("Error al eliminar la cita:", error);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+});
+
+router.put("/:codigoCita", async (req, res) => {
+  try {
+    const { codigoCita } = req.params;
+    const { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado, estado } = req.body;
+
+    // Validar si la cita existe
+    const citaExistente = await Cita.findOne({ codigoCita });
+    if (!citaExistente) {
+      return res.status(404).json({ error: "Cita no encontrada." });
     }
-  });
-  
+
+    // Actualizar los campos de la cita, incluyendo estado
+    const citaActualizada = await Cita.findOneAndUpdate(
+      { codigoCita },
+      { nombre, correo, telefono, fechaCita, horaCita, placa, cdaSeleccionado, estado },
+      { new: true } // Retorna la cita actualizada
+    );
+
+    res.json({ message: "Cita actualizada con éxito.", cita: citaActualizada });
+  } catch (error) {
+    console.error("Error al actualizar la cita:", error);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+});
+
+router.get("/", async (req, res) => {
+  try {
+    const citas = await Cita.find(); // Busca todas las citas en la BD
+    res.status(200).json(citas);
+  } catch (error) {
+    console.error("Error al obtener todas las citas:", error);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+});
 
 module.exports = router;
