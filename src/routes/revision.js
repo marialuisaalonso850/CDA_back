@@ -21,7 +21,7 @@ router.get("/:codigoCita", async (req, res) => {
 // Crear revisión
 router.post("/", async (req, res) => {
   try {
-    const { codigoCita } = req.body;
+    const { codigoCita, estadoFinal } = req.body;
     if (!codigoCita) {
       return res.status(400).json({ message: "El código de cita es requerido" });
     }
@@ -30,14 +30,14 @@ router.post("/", async (req, res) => {
     if (!cita) return res.status(404).json({ message: "Cita no encontrada" });
 
     // Permitir crear la revisión solo si la cita está en estado "Pendiente" o "Rechazado"
-    if (cita.estado !== "Pendiente" && cita.estado !== "Rechazado") {
+    if (cita.estado !== "Pendiente") {
       return res.status(400).json({ message: "La tecnomecánica ya fue realizada o procesada" });
     }
 
     // Crear la revisión
     const nuevaRevision = new Revision({
       ...req.body,
-      estadoFinal: "Pendiente", // Estado inicial de la revisión
+      estadoFinal: estadoFinal, // Estado inicial de la revisión
     });
 
     // Guardar la revisión
