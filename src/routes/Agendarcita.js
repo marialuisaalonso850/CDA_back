@@ -61,6 +61,7 @@ router.post("/", async (req, res) => {
       horaCita,
       placa: placaFormateada,
       cdaSeleccionado,
+      estado: "Pendiente",
       fechaCreacion: new Date()
     });
 

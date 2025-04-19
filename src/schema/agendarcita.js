@@ -42,6 +42,11 @@ const citaSchema = new mongoose.Schema({
         required: true,
         enum: ['CDA Norte', 'CDA Centro', 'CDA Sur']
     },
+    estado: { 
+        type: String, 
+        enum: ["Pendiente", "Tecnomecánica realizada","Aprobado","Rechazado"], 
+        default: "Pendiente" 
+      },
     fechaCreacion: {
         type: Date,
         default: Date.now
