@@ -87,7 +87,7 @@ const revisionSchema = new Schema(
     ambiental: ambientalSchema,
     electricidad: electricidadSchema,
     observaciones: { type: String, default: "" },
-    estadoFinal: { type: String, enum: ["Aprobado", "Reprobado", "Pendiente"], default: "Pendiente" },
+    estadoFinal: { type: String, enum: ["Aprobada", "Reprobada", "Pendiente"], default: "Pendiente" },
     codigoCita: { type: String, required: true },
   },
   { timestamps: true }
