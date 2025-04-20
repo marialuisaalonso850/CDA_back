@@ -35,10 +35,10 @@ const ambientalSchema = new Schema({
     enum: ["Dentro del límite", "Fuera del límite"],
     required: true
   },
-  co: { type: Number },            // % de monóxido de carbono
-  co2: { type: Number },           // % de dióxido de carbono
-  hc: { type: Number },            // ppm de hidrocarburos
-  opacidad: { type: Number },      // para motores diésel
+  co: { type: Number },            
+  co2: { type: Number },           
+  hc: { type: Number },            
+  opacidad: { type: Number },      
   observacionesEmisiones: { type: String },
 
   escape: {
@@ -52,10 +52,28 @@ const ambientalSchema = new Schema({
 });
 
 const electricidadSchema = new Schema({
-  luces: { type: String, enum: ["Funcionando", "No Funcionando"], required: true },
-  direccionales: { type: String, enum: ["Funcionando", "No Funcionando"], required: true },
-  claxon: { type: String, enum: ["Funcionando", "No Funcionando"], required: true },
-  observacionesElectricidad: { type: String, default: "" },
+  luces: {
+    type: String,
+    enum: ["Funcionando", "No Funcionando"],
+    required: true
+  },
+  observacionesLuces: { type: String },
+
+  direccionales: {
+    type: String,
+    enum: ["Funcionando", "No Funcionando"],
+    required: true
+  },
+  observacionesDireccionales: { type: String },
+
+  claxon: {
+    type: String,
+    enum: ["Funcionando", "No Funcionando"],
+    required: true
+  },
+  observacionesClaxon: { type: String },
+
+  observacionesElectricidad: { type: String }
 });
 
 // Esquema principal para la revisión
