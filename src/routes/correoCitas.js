@@ -12,6 +12,22 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+async function enviarPDF(email, pdfBase64) {
+  const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Reporte Técnico de Revisión',
+      text: 'Adjunto encontrarás tu reporte técnico en PDF.',
+      attachments: [{
+          filename: 'reporte_tecnico.pdf',
+          content: Buffer.from(pdfBase64, 'base64'),
+          contentType: 'application/pdf'
+      }]
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
 async function sendConfirmationCitas(codigoCita,email, nombre, fechaCita, horaCita, placa) {
   try {
     await transporter.sendMail({
@@ -48,4 +64,4 @@ async function sendConfirmationCitas(codigoCita,email, nombre, fechaCita, horaCi
   }
 }
 
-module.exports = sendConfirmationCitas;
+module.exports = {sendConfirmationCitas,enviarPDF};

@@ -1,6 +1,8 @@
 const express = require("express");
 const Revision = require("../schema/revision");
 const Cita = require("../schema/agendarcita");
+const correoCitas = require("../routes/correoCitas")
+const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
@@ -145,5 +147,7 @@ router.put("/:codigoCita", async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor." });
   }
 });
+
+
 
 module.exports = router;
