@@ -1,8 +1,11 @@
 const express = require("express");
 const Revision = require("../schema/revision");
 const Cita = require("../schema/agendarcita");
+const multer = require("multer"); 
 
 const router = express.Router();
+const storage = multer.memoryStorage(); // Guardamos el archivo en memoria
+const upload = multer({ storage: storage });
 
 // ✅ Obtener revisión por código de cita
 router.get("/:codigoCita", async (req, res) => {
@@ -145,5 +148,6 @@ router.put("/:codigoCita", async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor." });
   }
 });
+
 
 module.exports = router;
