@@ -9,7 +9,7 @@ const authenticate = require('./auth/authenticate');
 
 class Server {
     constructor(port) {
-        this.port = port || 3000;
+        this.port = port || 5000;
         this.ACCESS_TOKEN_SECRET = this.generateTokenSecrets();
         this.REFRESH_TOKEN_SECRET = this.generateTokenSecrets();
 
@@ -26,7 +26,8 @@ class Server {
             eliminar: '/api/eliminarcita',
             home: '/',
             revision: "/api/revisiones",
-            placas: "/api/placas"
+            placas: "/api/placas",
+            sendEmail : "/api/send-email"
         };
 
         this.middlewares();
@@ -52,7 +53,8 @@ class Server {
         this.app.use(this.paths.citas, require('./routes/Agendarcita'));
         this.app.use(this.paths.eliminar, require('./routes/eliminarCita'));
         this.app.use(this.paths.revision, require('./routes/revision'));
-        this.app.use(this.paths.placas, require('./routes/placas')); // Asegúrate de que este archivo exista y exporte correctamente las rutas.
+        this.app.use(this.paths.placas, require('./routes/placas')); 
+        this.app.use(this.paths.sendEmail, require('./routes/sendEmail'));// Asegúrate de que este archivo exista y exporte correctamente las rutas.
 
         // Ruta home básica para verificar que el servidor está funcionando
         this.app.get(this.paths.home, (req, res) => {
