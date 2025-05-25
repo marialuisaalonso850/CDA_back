@@ -1,7 +1,7 @@
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const Cita = require("../schema/agendarcita");
-const sendConfirmationCitas = require("./correoCitas");
+const {sendConfirmationCitas} = require("./correoCitas");
 const router = express.Router();
 const Placa = require("../schema/placasValidas");
 
