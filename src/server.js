@@ -23,6 +23,7 @@ class Server {
             refreshToken: '/api/refresh-token',
             citas: '/api/citas',
             eliminar: '/api/eliminarcita',
+            pago:'/api/pago',
             home: '/'
         }
 
@@ -49,6 +50,7 @@ class Server {
         this.app.use(this.paths.refreshToken, require('./routes/refreshToken'));
         this.app.use(this.paths.citas, require('./routes/Agendarcita'));
         this.app.use(this.paths.eliminar, require('./routes/eliminarCita'));
+        this.app.use(this.paths.pago, require('./routes/PagoAnticipado'))
         
         this.app.get(this.paths.home, (req, res) => {
             res.json({ message: 'server in good state'});

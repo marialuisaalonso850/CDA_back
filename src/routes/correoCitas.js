@@ -1,4 +1,8 @@
 const nodemailer = require("nodemailer");
+const PDFDocument = require("pdfkit");
+const { Readable } = require("stream");
+
+
 const password1="multiservicios1234"
 const password="vaeh gbid lbzu zszu"
 const correo="marialuisaalonso850@gmail.com"
@@ -48,4 +52,58 @@ async function sendConfirmationCitas(codigoCita,email, nombre, fechaCita, horaCi
   }
 }
 
-module.exports = sendConfirmationCitas;
+function generarPDFBuffer(datos) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument();
+    const buffers = [];
+
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", () => {
+      const pdfData = Buffer.concat(buffers);
+      resolve(pdfData);
+    });
+
+    doc.fontSize(18).text("Confirmación de Pago", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(12).text(`Placa: ${datos.placa}`);
+    doc.text(`Tipo de Vehículo: ${datos.tipoVehiculo}`);
+    doc.text(`Año del Vehículo: ${datos.añoVehiculo}`);
+    doc.text(`Antigüedad: ${datos.antiguedad} años`);
+    doc.text(`Valor Pagado: $${datos.valorCalculado}`);
+    doc.text(`Tipo de Tarjeta: ${datos.tipoTarjeta}`);
+    doc.text(`Número de Tarjeta: ${datos.numeroTarjeta}`);
+    doc.text(`Código de Cita: ${datos.codigoCita}`);
+
+    doc.end();
+  });
+}
+
+async function sendPagoConfirmado(email, datosPago) {
+  try {
+    const pdfBuffer = await generarPDFBuffer(datosPago);
+
+    await transporter.sendMail({
+      from: correo,
+      to: email,
+      subject: "Confirmación de pago - CDA Armenia",
+      html: `
+        <p>Hola,</p>
+        <p>Gracias por realizar tu pago. Adjuntamos el comprobante en formato PDF.</p>
+        <p>Si tienes alguna duda, contáctanos.</p>
+      `,
+      attachments: [
+        {
+          filename: "ComprobantePago.pdf",
+          content: pdfBuffer,
+          contentType: "application/pdf"
+        }
+      ]
+    });
+
+    console.log("Correo de confirmación de pago enviado a:", email);
+  } catch (error) {
+    console.error("Error al enviar el correo de pago:", error);
+  }
+}
+
+module.exports = {sendConfirmationCitas,sendPagoConfirmado};

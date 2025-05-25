@@ -44,7 +44,7 @@ const citaSchema = new mongoose.Schema({
     },
     estado: { 
         type: String, 
-        enum: ["Pendiente", "Tecnomecánica realizada","Aprobado","Rechazado"], 
+        enum: ["Pendiente", "Tecnomecánica realizada","Aprobado","Rechazado", "Pagada"], 
         default: "Pendiente" 
       },
     fechaCreacion: {
